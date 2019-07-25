@@ -1,11 +1,11 @@
 const {
   doc: {
-    builders: { concat, join }
+    builders: { concat, group, indent, join, line, softline }
   }
 } = require('prettier');
 
 const ImportDirective = {
-  print: ({ node }) => {
+  print: ({ node, options }) => {
     // @TODO: handle proper escaping
     let doc = concat(['"', node.path, '"']);
 
@@ -14,15 +14,21 @@ const ImportDirective = {
     } else if (node.symbolAliases) {
       doc = concat([
         '{',
-        join(
-          ', ',
-          node.symbolAliases.map(([a, b]) => (b ? [a, b].join(' as ') : a))
+        indent(
+          concat([
+            options.bracketSpacing ? line : softline,
+            join(
+              concat([',', line]),
+              node.symbolAliases.map(([a, b]) => (b ? `${a} as ${b}` : a))
+            )
+          ])
         ),
+        options.bracketSpacing ? line : softline,
         '} from ',
         doc
       ]);
     }
-    return concat(['import ', doc, ';']);
+    return group(concat(['import ', doc, ';']));
   }
 };
 
